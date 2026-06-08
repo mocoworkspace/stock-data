@@ -290,6 +290,15 @@ def fetch_stock(symbol: str) -> dict | None:
             "v": int(meta.get("regularMarketVolume") or 0),
             "ex": meta.get("exchangeName", ""),
             "ch": chart,
+            # 配当利回り（小数 → % に変換して格納）
+            "dy": round(
+                float(
+                    meta.get("dividendYield")
+                    or meta.get("trailingAnnualDividendYield")
+                    or 0
+                ) * 100,
+                4,
+            ),
         }
 
     except Exception as e:
