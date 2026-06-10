@@ -26,6 +26,9 @@ SLEEP = 1.2  # リクエスト間隔（秒）: 相手サーバーへの負荷を
 MAX_PAGES_PER_DAY = 30  # 1日あたりの一覧ページ上限（暴走防止）
 KEYWORD = "株主優待"
 REPORT_PATH = Path("yutai_report.md")
+# 通知済み開示の記録（重複 Issue 防止）。ワークフローがコミットして永続化する
+SEEN_PATH = Path(__file__).parent / "seen_disclosures.json"
+SEEN_MAX = 500  # 記録の上限（古いものから捨てる）
 
 # 一覧ページの1行から 時刻・コード・社名・表題・PDFリンク を抽出
 # class 属性は "oddnew-L kjTime" のような複合クラスなので前方一致にしない
@@ -88,6 +91,22 @@ def check_day(ymd: str, watch: dict) -> list[dict]:
     return hits
 
 
+def load_seen() -> list[str]:
+    if SEEN_PATH.exists():
+        try:
+            return json.loads(SEEN_PATH.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            return []
+    return []
+
+
+def save_seen(seen: list[str]) -> None:
+    SEEN_PATH.write_text(
+        json.dumps(seen[-SEEN_MAX:], ensure_ascii=False, indent=1),
+        encoding="utf-8",
+    )
+
+
 def main() -> None:
     watch = load_watch_codes()
     print(f"監視対象: {len(watch)} 銘柄 / 過去 {DAYS_BACK} 日分をチェック")
@@ -102,9 +121,18 @@ def main() -> None:
             print(f"  {ymd}: {len(hits)} 件ヒット")
         all_hits.extend(hits)
 
+    # 通知済みの開示（PDFファイル名で識別）を除外して重複 Issue を防ぐ
+    seen = load_seen()
+    new_hits = [h for h in all_hits if h["pdf"] not in seen]
+    if len(all_hits) > len(new_hits):
+        print(f"通知済み {len(all_hits) - len(new_hits)} 件をスキップ")
+    all_hits = new_hits
+
     if not all_hits:
         print("該当する開示はありませんでした。")
         return
+
+    save_seen(seen + [h["pdf"] for h in all_hits])
 
     # Issue 本文（Markdown）を生成
     lines = [

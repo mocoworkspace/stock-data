@@ -10,7 +10,7 @@ jobs:
   check:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write  # 通知済みリスト（seen_disclosures.json）のコミットに必要
       issues: write  # 検知時に Issue を作成するために必要
 
     steps:
@@ -41,3 +41,12 @@ jobs:
             sleep 60
           done
           exit 1
+
+      - name: Commit seen list
+        if: ${{ hashFiles('yutai_report.md') != '' }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add scripts/seen_disclosures.json
+          git diff --staged --quiet && echo "No changes." || \
+            git commit -m "chore: update seen disclosures" && git push
