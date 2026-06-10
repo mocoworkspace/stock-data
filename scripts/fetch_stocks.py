@@ -260,7 +260,14 @@ US_SYMBOLS = [
     "MMM",    # 3M
 ]
 
-ALL_SYMBOLS = JAPAN_SYMBOLS + US_SYMBOLS
+# 主要株価指数（ウォッチリスト上部に表示）
+INDEX_SYMBOLS = [
+    "^N225",   # 日経225
+    "^GSPC",   # S&P500
+    "^IXIC",   # NASDAQ総合
+]
+
+ALL_SYMBOLS = INDEX_SYMBOLS + JAPAN_SYMBOLS + US_SYMBOLS
 
 # ── ユーティリティ ──────────────────────────────────────────────────────────
 
