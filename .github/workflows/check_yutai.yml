@@ -1,0 +1,35 @@
+name: Check Yutai Disclosures
+
+on:
+  schedule:
+    # 毎週月曜 JST 07:00 = UTC 22:00 日曜（過去8日分をチェック）
+    - cron: '0 22 * * 0'
+  workflow_dispatch:  # 手動実行も可能
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write  # 検知時に Issue を作成するために必要
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4.2.2
+
+      - name: Set up Python
+        uses: actions/setup-python@v5.6.0
+        with:
+          python-version: '3.11'
+
+      - name: Check TDnet disclosures
+        run: python scripts/check_yutai_disclosures.py
+
+      - name: Create issue if hits found
+        if: ${{ hashFiles('yutai_report.md') != '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create --repo "${{ github.repository }}" \
+            --title "📋 株主優待関連の開示を検知 ($(date +'%Y-%m-%d'))" \
+            --body-file yutai_report.md
