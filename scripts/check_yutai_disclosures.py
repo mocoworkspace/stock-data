@@ -21,7 +21,7 @@ from datetime import date, timedelta
 from pathlib import Path
 
 BASE = "https://www.release.tdnet.info/inbs"
-DAYS_BACK = 8  # 週1実行 + 1日の重複バッファ（取りこぼし防止）
+DAYS_BACK = 15  # 週1実行が1回丸ごと失敗しても翌週でカバーできる範囲
 SLEEP = 1.2  # リクエスト間隔（秒）: 相手サーバーへの負荷を抑える
 MAX_PAGES_PER_DAY = 30  # 1日あたりの一覧ページ上限（暴走防止）
 KEYWORD = "株主優待"
