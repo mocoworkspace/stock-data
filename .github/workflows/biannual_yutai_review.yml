@@ -52,6 +52,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh issue create --repo "${{ github.repository }}" \
-            --title "🔍 優待データ半期総点検 ($(date +'%Y年%-m月'))" \
-            --body-file review_issue.md
+          # GitHub API の一時障害に備えて最大3回リトライ
+          for i in 1 2 3; do
+            if gh issue create --repo "${{ github.repository }}" \
+              --title "🔍 優待データ半期総点検 ($(date +'%Y年%-m月'))" \
+              --body-file review_issue.md; then
+              exit 0
+            fi
+            echo "attempt $i failed; retrying in 60s..."
+            sleep 60
+          done
+          exit 1
