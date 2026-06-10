@@ -1,0 +1,57 @@
+name: Biannual Yutai Review Reminder
+
+on:
+  schedule:
+    # 年2回（5月1日・11月1日 JST 09:00 = UTC 00:00）に総点検リマインドを作成
+    - cron: '0 0 1 5,11 *'
+  workflow_dispatch:  # 手動実行も可能
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4.2.2
+
+      - name: Build review checklist
+        run: |
+          python - <<'EOF'
+          import json
+          codes = json.load(open("scripts/yutai_codes.json", encoding="utf-8"))
+          lines = [
+              "## 株主優待データの半期総点検",
+              "",
+              f"現在の登録銘柄: **{len(codes)} 銘柄**",
+              "",
+              "TDnet週次監視で開示は検知していますが、確定月のズレ・記載漏れ等を",
+              "拾うため、半年に1回の全銘柄チェックを実施してください。",
+              "",
+              "### 手順",
+              "1. Claude Code のチャットで「優待データの総点検をやって」と指示する",
+              "2. Claude が全銘柄を Yahoo!ファイナンス等で手動相当のペースで検証する",
+              "3. 修正があれば `stock_yutai_app/lib/data/yutai_data.dart` を更新",
+              "4. 銘柄の増減があれば `stock-data/scripts/yutai_codes.json` も同期する",
+              "5. 完了したらこの Issue をクローズする",
+              "",
+              "### 対象銘柄",
+              "",
+              "| コード | 銘柄名 |",
+              "|---|---|",
+          ]
+          for code, name in sorted(codes.items()):
+              lines.append(f"| {code} | {name} |")
+          open("review_issue.md", "w", encoding="utf-8").write("\n".join(lines))
+          print(f"{len(codes)} 銘柄のチェックリストを生成しました")
+          EOF
+
+      - name: Create reminder issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create --repo "${{ github.repository }}" \
+            --title "🔍 優待データ半期総点検 ($(date +'%Y年%-m月'))" \
+            --body-file review_issue.md
