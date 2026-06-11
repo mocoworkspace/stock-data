@@ -278,10 +278,14 @@ SLEEP_BETWEEN_REQUESTS = 0.8  # 秒
 
 
 def fetch_stock(symbol: str) -> dict | None:
-    """1銘柄の EOD データを Yahoo Finance から取得する"""
+    """1銘柄の EOD データを Yahoo Finance から取得する
+
+    range=1y + events=div で過去1年の配当履歴も取得し、
+    実績ベースの年間1株配当（dps）を算出する。
+    """
     url = (
         f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}"
-        "?interval=1d&range=30d&includePrePost=false"
+        "?interval=1d&range=1y&includePrePost=false&events=div"
     )
     try:
         resp = requests.get(url, headers=HEADERS, timeout=REQUEST_TIMEOUT)
@@ -313,6 +317,15 @@ def fetch_stock(symbol: str) -> dict | None:
         # 最新 30 日分の終値（None は 0.0 に変換）
         chart = [round(float(p), 4) if p is not None else 0.0 for p in close_prices[-30:]]
 
+        # 過去1年の配当イベント合計 = 実績ベースの年間1株配当（DPS）
+        div_events = result.get("events", {}).get("dividends", {})
+        one_year_ago = time.time() - 365 * 24 * 3600
+        dps = sum(
+            float(d.get("amount", 0))
+            for d in div_events.values()
+            if float(d.get("date", 0)) >= one_year_ago
+        )
+
         return {
             "s": symbol,
             "n": meta.get("shortName") or meta.get("longName") or symbol,
@@ -336,6 +349,8 @@ def fetch_stock(symbol: str) -> dict | None:
                 ) * 100,
                 4,
             ),
+            # 年間1株配当（過去1年の配当実績の合計）
+            "dps": round(dps, 4),
         }
 
     except Exception as e:
