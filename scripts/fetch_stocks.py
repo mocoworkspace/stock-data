@@ -195,6 +195,22 @@ JAPAN_SYMBOLS = [
     "6723.T",  # ルネサスエレクトロニクス
     "9602.T",  # 東宝
     "2432.T",  # DeNA
+    # ── 国内ETF（上場投資信託） ───────────────────────────────────────────
+    "1306.T",  # NEXT FUNDS TOPIX連動型
+    "1321.T",  # NEXT FUNDS 日経225連動型
+    "1343.T",  # NEXT FUNDS 東証REIT指数連動型
+    "1489.T",  # NEXT FUNDS 日経高配当株50
+    "1478.T",  # iシェアーズ MSCI ジャパン高配当利回り
+    "1476.T",  # iシェアーズ・コア Jリート
+    "1655.T",  # iシェアーズ S&P500 米国株
+    "2558.T",  # MAXIS米国株式（S&P500）
+    "2559.T",  # MAXIS全世界株式（オール・カントリー）
+    "2631.T",  # MAXISナスダック100
+    "1545.T",  # NEXT FUNDS NASDAQ-100連動型
+    "1570.T",  # NEXT FUNDS 日経レバレッジ
+    "1540.T",  # 純金上場信託（金の果実）
+    "1698.T",  # 上場インデックスファンド日本高配当
+    "2244.T",  # グローバルX US テック・トップ20
 ]
 
 US_SYMBOLS = [
@@ -258,6 +274,19 @@ US_SYMBOLS = [
     "BA",     # Boeing
     "GE",     # GE Aerospace
     "MMM",    # 3M
+    # ── 米国ETF ───────────────────────────────────────────────────────────
+    "VOO",    # Vanguard S&P500
+    "VTI",    # Vanguard Total Stock Market
+    "VT",     # Vanguard Total World Stock
+    "QQQ",    # Invesco QQQ（NASDAQ100）
+    "SPY",    # SPDR S&P500
+    "VYM",    # Vanguard 高配当株
+    "HDV",    # iShares 高配当株
+    "SPYD",   # SPDR S&P500 高配当株
+    "SCHD",   # Schwab 米国配当株
+    "JEPI",   # JPMorgan カバードコール（毎月分配）
+    "TLT",    # iShares 米国債20年超
+    "GLD",    # SPDR ゴールド
 ]
 
 # 主要株価指数（ウォッチリスト上部に表示）
@@ -268,6 +297,25 @@ INDEX_SYMBOLS = [
 ]
 
 ALL_SYMBOLS = INDEX_SYMBOLS + JAPAN_SYMBOLS + US_SYMBOLS
+
+# Yahoo の銘柄名が分かりにくい国内ETFは日本語名で上書き（検索性向上）
+NAME_OVERRIDES = {
+    "1306.T": "TOPIX連動型ETF（NF）",
+    "1321.T": "日経225連動型ETF（NF）",
+    "1343.T": "東証REIT指数ETF（NF）",
+    "1489.T": "日経高配当株50 ETF（NF）",
+    "1478.T": "MSCIジャパン高配当ETF（iシェアーズ）",
+    "1476.T": "JリートETF（iシェアーズ・コア）",
+    "1655.T": "S&P500米国株ETF（iシェアーズ）",
+    "2558.T": "米国株式S&P500 ETF（MAXIS）",
+    "2559.T": "全世界株式オルカンETF（MAXIS）",
+    "2631.T": "ナスダック100 ETF（MAXIS）",
+    "1545.T": "NASDAQ-100連動型ETF（NF）",
+    "1570.T": "日経レバレッジETF（NF）",
+    "1540.T": "純金上場信託（金の果実）",
+    "1698.T": "日本高配当ETF（上場インデックス）",
+    "2244.T": "USテック・トップ20 ETF（グローバルX）",
+}
 
 # ── ユーティリティ ──────────────────────────────────────────────────────────
 
@@ -328,7 +376,10 @@ def fetch_stock(symbol: str) -> dict | None:
 
         return {
             "s": symbol,
-            "n": meta.get("shortName") or meta.get("longName") or symbol,
+            "n": NAME_OVERRIDES.get(symbol)
+            or meta.get("shortName")
+            or meta.get("longName")
+            or symbol,
             "p": round(price, 4),
             "c": round(change, 4),
             "cp": round(change_pct, 4),
