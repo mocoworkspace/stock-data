@@ -55,7 +55,7 @@ jobs:
           # GitHub API の一時障害に備えて最大3回リトライ
           for i in 1 2 3; do
             if gh issue create --repo "${{ github.repository }}" \
-              --title "【株価アプリ】🔍 優待データ半期総点検 ($(date +'%Y年%-m月'))" \
+              --title "【ゆうかぶ】🔍 優待データ半期総点検 ($(date +'%Y年%-m月'))" \
               --body-file review_issue.md; then
               exit 0
             fi

@@ -33,7 +33,7 @@ jobs:
           # GitHub API の一時障害に備えて最大3回リトライ
           for i in 1 2 3; do
             if gh issue create --repo "${{ github.repository }}" \
-              --title "【株価アプリ】📋 株主優待関連の開示を検知 ($(date +'%Y-%m-%d'))" \
+              --title "【ゆうかぶ】📋 株主優待関連の開示を検知 ($(date +'%Y-%m-%d'))" \
               --body-file yutai_report.md; then
               exit 0
             fi
